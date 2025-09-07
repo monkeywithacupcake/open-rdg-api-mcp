@@ -13,6 +13,14 @@ The goal of this project is to make a usable proof of concept for getting Tablea
 
 Can make your local LLM into a genie to get quick USDA Rural Development data with natural language rather than reling on the clicking in the Tableau dashboard. 
 
+## Use
+1. fork and clone this repo
+2. `uv sync` # I may make this into a docker container
+3. `uv run fetch/download_data.py` # or download Export to CSV manually and put in /data dir under open-rdg-api-mcp
+4. `uv run api/data_processor.py` # this makes the csv into .db
+5. `uv run api/server.py` # this makes the api endpoints available on localhost:8000 (already better)
+6. THIS WILL BE MCP - not finished yet
+
 ## Steps
 1. Get data from the website into a local file
     - this was painful and didn't have to be - note to people trying to do this, use `playwright`. I am on a mac and have had some issues with chromium for this kind of thing, so I used firefox (but playwright still uses chromium to build your code, that seems to work for me). The actual code I put in my shell to get the python to click on the download button was `npx playwright codegen --browser=firefox https://www.rd.usda.gov/rural-data-gateway/rural-investments/data`. Keeping this detail because it was annoying and really should not have been that hard.
@@ -20,9 +28,9 @@ Can make your local LLM into a genie to get quick USDA Rural Development data wi
 2.  Process data into local database
     - only process newest file
 3.  Make an API out of that local file
+    - add tests, so can make sure is running as expected
 4.  Make an MCP Server consuming that API
 
 
-## Current Step - API
-
-- this should be straightforward
+## Current Step - MCP
+- gonna use fast mcp
