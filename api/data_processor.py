@@ -8,8 +8,8 @@ Handles CSV parsing, cleaning, and database storage
 import pandas as pd
 import sqlite3
 from pathlib import Path
+import os
 from typing import Optional, Dict, List
-import json
 from datetime import datetime
 
 class USDADataProcessor:
@@ -158,7 +158,272 @@ class USDADataProcessor:
         except (ValueError, TypeError):
             print(f"Warning: Could not convert investment value to numeric: {value}")
             return 0.0
+
+    def _build_aggregation_tables(self, cursor):
+        """
+        Kill if exist and then 
+        Rebuild all aggregation tables from current structured data
+        """
+        print("Making aggregation tables...")
+        
+        # Clear existing aggregations if exist
+        cursor.execute("DROP TABLE IF EXISTS state_year_summary")
+        cursor.execute("DROP TABLE IF EXISTS program_year_summary") 
+        cursor.execute("DROP TABLE IF EXISTS state_program_year_summary")
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS state_year_summary (
+                state_name TEXT,
+                fiscal_year INTEGER,
+                total_investments INTEGER,
+                total_dollars REAL,
+                avg_investment REAL,
+                min_investment REAL,
+                max_investment REAL,
+                unique_programs INTEGER,
+                top_programs TEXT, -- JSON array
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (state_name, fiscal_year)
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS program_year_summary (
+                program_area TEXT,
+                fiscal_year INTEGER,
+                total_investments INTEGER,
+                total_dollars REAL,
+                avg_investment REAL,
+                min_investment REAL,
+                max_investment REAL,
+                unique_states INTEGER,
+                top_states TEXT, -- JSON array
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (program_area, fiscal_year)
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS state_program_year_summary (
+                state_name TEXT,
+                program_area TEXT,
+                fiscal_year INTEGER,
+                total_investments INTEGER,
+                total_dollars REAL,
+                avg_investment REAL,
+                min_investment REAL,
+                max_investment REAL,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (state_name, program_area, fiscal_year)
+            )
+        """)
+        
+        # state_year_summary
+        cursor.execute("""
+            INSERT INTO state_year_summary (
+                state_name, fiscal_year, total_investments, total_dollars,
+                avg_investment, min_investment, max_investment, unique_programs, top_programs
+            )
+            SELECT 
+                state_name,
+                fiscal_year,
+                COUNT(*) as total_investments,
+                SUM(investment_dollars_numeric) as total_dollars,
+                ROUND(AVG(investment_dollars_numeric), 2) as avg_investment,
+                MIN(investment_dollars_numeric) as min_investment,
+                MAX(investment_dollars_numeric) as max_investment,
+                COUNT(DISTINCT program_area) as unique_programs,
+                '[]' as top_programs  -- TODO: Calculate top programs JSON
+            FROM investments
+            WHERE investment_dollars_numeric > 0
+            GROUP BY state_name, fiscal_year
+        """)
+        
+        # program_year_summary
+        cursor.execute("""
+            INSERT INTO program_year_summary (
+                program_area, fiscal_year, total_investments, total_dollars,
+                avg_investment, min_investment, max_investment, unique_states, top_states
+            )
+            SELECT 
+                program_area,
+                fiscal_year,
+                COUNT(*) as total_investments,
+                SUM(investment_dollars_numeric) as total_dollars,
+                ROUND(AVG(investment_dollars_numeric), 2) as avg_investment,
+                MIN(investment_dollars_numeric) as min_investment,
+                MAX(investment_dollars_numeric) as max_investment,
+                COUNT(DISTINCT state_name) as unique_states,
+                '[]' as top_states  -- TODO: Calculate top states JSON
+            FROM investments
+            WHERE investment_dollars_numeric > 0 AND program_area IS NOT NULL
+            GROUP BY program_area, fiscal_year
+        """)
+        
+        # state_program_year_summary
+        cursor.execute("""
+            INSERT INTO state_program_year_summary (
+                state_name, program_area, fiscal_year, total_investments, total_dollars,
+                avg_investment, min_investment, max_investment
+            )
+            SELECT 
+                state_name,
+                program_area,
+                fiscal_year,
+                COUNT(*) as total_investments,
+                SUM(investment_dollars_numeric) as total_dollars,
+                ROUND(AVG(investment_dollars_numeric), 2) as avg_investment,
+                MIN(investment_dollars_numeric) as min_investment,
+                MAX(investment_dollars_numeric) as max_investment
+            FROM investments
+            WHERE investment_dollars_numeric > 0 AND program_area IS NOT NULL
+            GROUP BY state_name, program_area, fiscal_year
+        """)
+        
+        print("Aggregation tables built or rebuilt successfully")
+
+    def get_state_summary(self, state: str = None, fiscal_year: int = None) -> Dict:
+        """
+        Get pre-computed state summary data
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            if state and fiscal_year:
+                # Specific state and year
+                cursor.execute("""
+                    SELECT state_name, fiscal_year, total_investments, total_dollars,
+                           avg_investment, min_investment, max_investment, unique_programs
+                    FROM state_year_summary 
+                    WHERE state_name = ? AND fiscal_year = ?
+                """, (state, fiscal_year))
+                result = cursor.fetchone()
+                
+                if result:
+                    return {
+                        "state_name": result[0],
+                        "fiscal_year": result[1], 
+                        "total_investments": result[2],
+                        "total_dollars": result[3],
+                        "avg_investment": result[4],
+                        "min_investment": result[5],
+                        "max_investment": result[6],
+                        "unique_programs": result[7]
+                    }
+                else:
+                    return {"error": f"No data found for {state} in {fiscal_year}"}
+                    
+            elif state:
+                # All years for a state
+                cursor.execute("""
+                    SELECT fiscal_year, total_investments, total_dollars, avg_investment
+                    FROM state_year_summary 
+                    WHERE state_name = ?
+                    ORDER BY fiscal_year
+                """, (state,))
+                results = cursor.fetchall()
+                
+                return {
+                    "state_name": state,
+                    "years": [
+                        {
+                            "fiscal_year": row[0],
+                            "total_investments": row[1], 
+                            "total_dollars": row[2],
+                            "avg_investment": row[3]
+                        } for row in results
+                    ]
+                }
+            else:
+                # Top states summary
+                cursor.execute("""
+                    SELECT state_name, SUM(total_investments) as total_inv, 
+                           SUM(total_dollars) as total_dollars,
+                           AVG(avg_investment) as avg_inv
+                    FROM state_year_summary 
+                    GROUP BY state_name
+                    ORDER BY total_dollars DESC
+                    LIMIT 10
+                """)
+                results = cursor.fetchall()
+                
+                return {
+                    "top_states": [
+                        {
+                            "state_name": row[0],
+                            "total_investments": row[1],
+                            "total_dollars": row[2], 
+                            "avg_investment": row[3]
+                        } for row in results
+                    ]
+                }
+                
+        except Exception as e:
+            raise Exception(f"Error getting state summary: {e}")
+        finally:
+            conn.close()
     
+    def get_program_summary(self, program: str = None, fiscal_year: int = None) -> Dict:
+        """
+        Get pre-computed program summary data
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            if program and fiscal_year:
+                # Specific program and year
+                cursor.execute("""
+                    SELECT program_area, fiscal_year, total_investments, total_dollars,
+                           avg_investment, min_investment, max_investment, unique_states
+                    FROM program_year_summary 
+                    WHERE program_area = ? AND fiscal_year = ?
+                """, (program, fiscal_year))
+                result = cursor.fetchone()
+                
+                if result:
+                    return {
+                        "program_area": result[0],
+                        "fiscal_year": result[1], 
+                        "total_investments": result[2],
+                        "total_dollars": result[3],
+                        "avg_investment": result[4],
+                        "min_investment": result[5],
+                        "max_investment": result[6],
+                        "unique_states": result[7]
+                    }
+                else:
+                    return {"error": f"No data found for {program} in {fiscal_year}"}
+                    
+            else:
+                # All programs summary
+                cursor.execute("""
+                    SELECT program_area, SUM(total_investments) as total_inv,
+                           SUM(total_dollars) as total_dollars,
+                           AVG(avg_investment) as avg_inv
+                    FROM program_year_summary 
+                    GROUP BY program_area
+                    ORDER BY total_dollars DESC
+                """)
+                results = cursor.fetchall()
+                
+                return {
+                    "programs": [
+                        {
+                            "program_area": row[0],
+                            "total_investments": row[1],
+                            "total_dollars": row[2],
+                            "avg_investment": row[3]
+                        } for row in results
+                    ]
+                }
+                
+        except Exception as e:
+            raise Exception(f"Error getting program summary: {e}")
+        finally:
+            conn.close()
+
     def store_dataframe(self, df: pd.DataFrame, source_file: Path):
         """
         Store processed DataFrame in both JSON (backup) and structured tables
@@ -168,8 +433,9 @@ class USDADataProcessor:
         try:
             cursor = conn.cursor()
             
-            # csv -> db 
+            # csv -> db + agg tables
             self._insert_structured_data(cursor, df)
+            self._build_aggregation_tables(cursor)
             
             conn.commit()
             print(f"Stored {len(df)} records in structured database with indexes and aggregations")
@@ -309,13 +575,29 @@ class USDADataProcessor:
         finally:
             conn.close()
     
+def find_newest_csv(directory_path):
+    """We only want newest csv"""
+    try:
+        data_dir = Path(directory_path)
+        csv_files = data_dir.glob("*.csv")
+        
+        if not csv_files:
+            print("There is no csv, you may need to run `uv run fetch/download_data.py`")
+            return None # No files found
 
+        # Use the `key=os.path.getmtime` argument to find the most recently modified file
+        newest_file = max(csv_files, key=os.path.getmtime)
+        
+        return newest_file
+    
+    except FileNotFoundError:
+        print(f"Error: The directory '{directory_path}' does not exist.")
+        return None
 
 if __name__ == "__main__":
     processor = USDADataProcessor()
-    
-    # Process any CSV files in the data directory - should be only 1
+    # now run the process on our csv file
     data_dir = Path("./data")
-    for csv_file in data_dir.glob("*.csv"):
-        processor.process_csv(csv_file)
+    csv_file = find_newest_csv(data_dir)
+    processor.process_csv(csv_file)
     
