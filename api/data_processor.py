@@ -9,8 +9,7 @@ import pandas as pd
 import sqlite3
 from pathlib import Path
 import os
-from typing import Optional, Dict, List
-from datetime import datetime
+from typing import Optional, Dict
 
 class USDADataProcessor:
     def __init__(self, db_path="./data/usda_data.db"):

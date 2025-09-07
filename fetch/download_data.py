@@ -5,7 +5,6 @@ Automates the multi-step download process for CSV data
 """
 
 from playwright.sync_api import sync_playwright
-import os
 import time
 from pathlib import Path
 
