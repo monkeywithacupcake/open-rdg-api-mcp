@@ -10,6 +10,8 @@ import sqlite3
 from pathlib import Path
 import os
 from typing import Optional, Dict
+from datetime import datetime
+import json
 
 class USDADataProcessor:
     def __init__(self, db_path="./data/usda_data.db"):
@@ -22,6 +24,16 @@ class USDADataProcessor:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
+        # stash the table as raw
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS rural_investments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                imported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                raw_data TEXT,
+                processed_data TEXT
+            )
+        """)
+
         # Structured table for indexed queries and aggregations
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS investments (
@@ -425,12 +437,30 @@ class USDADataProcessor:
 
     def store_dataframe(self, df: pd.DataFrame, source_file: Path):
         """
-        Store processed DataFrame in both JSON (backup) and structured tables
+        Store processed DataFrame in structured +agg tables
         """
         conn = sqlite3.connect(self.db_path)
         
         try:
             cursor = conn.cursor()
+
+            # Store raw data as JSON (backup/compatibility)
+            raw_data = df.to_json(orient='records')
+            summary = {
+                'source_file': str(source_file),
+                'row_count': len(df),
+                'columns': list(df.columns),
+                'processed_at': datetime.now().isoformat()
+            }
+            
+            cursor.execute("""
+                INSERT INTO rural_investments (raw_data, processed_data)
+                VALUES (?, ?)
+            """, (raw_data, json.dumps(summary)))
+
+            # Clear existing data for fresh import
+            # otherwise you will have duplicates
+            cursor.execute("DELETE FROM investments")
             
             # csv -> db + agg tables
             self._insert_structured_data(cursor, df)
@@ -506,7 +536,30 @@ class USDADataProcessor:
         print(f"Inserted {len(records)} records into structured investments table")
     
     
-
+    def get_data_summary(self) -> Dict:
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # this is looking at the number of tables we 
+        # have imported. decide if want to keep later
+        # useful for testing
+        cursor.execute("SELECT COUNT(*) FROM rural_investments")
+        total_imports = cursor.fetchone()[0]
+        
+        cursor.execute("""
+            SELECT processed_data FROM rural_investments 
+            ORDER BY imported_at DESC LIMIT 1
+        """)
+        latest = cursor.fetchone()
+        
+        conn.close()
+        
+        summary = {
+            'total_imports': total_imports,
+            'latest_import': json.loads(latest[0]) if latest else None
+        }
+        
+        return summary
 
     def query_structured_data(self, filters: Dict = None, limit: int = 100, offset: int = 0) -> Dict:
         """
@@ -599,4 +652,6 @@ if __name__ == "__main__":
     data_dir = Path("./data")
     csv_file = find_newest_csv(data_dir)
     processor.process_csv(csv_file)
-    
+    # Print summary
+    summary = processor.get_data_summary()
+    print("Data Summary:", json.dumps(summary, indent=2))
