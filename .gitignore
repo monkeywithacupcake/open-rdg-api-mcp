@@ -23,3 +23,6 @@ dist/
 build/
 *.egg-info/
 
+# ignore any data
+data/*.csv
+
