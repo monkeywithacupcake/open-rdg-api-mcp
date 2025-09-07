@@ -25,4 +25,5 @@ build/
 
 # ignore any data
 data/*.csv
+data/*.db
 
