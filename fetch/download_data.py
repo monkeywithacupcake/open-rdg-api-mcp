@@ -9,10 +9,35 @@ import os
 import time
 from pathlib import Path
 
+def print_links_in_div(page, div_class_name):
+
+        # Construct the CSS selector to target links within the specific div
+        selector = f"div.{div_class_name} a"
+
+        # Find all link elements within the div
+        link_elements = page.locator(selector).all()
+
+        # Iterate through the link elements and print their text content
+        if link_elements:
+            print(f"Links within div with class '{div_class_name}':")
+            for link in link_elements:
+                print(link.text_content())
+                print(link.get_attribute('href'))
+
+        else:
+            print(f"No links found within div with class '{div_class_name}'.")
+
+def handle_dialog(dialog):
+    print(dialog.message)
+    dialog.dismiss()
+
 class USDADataFetcher:
     def __init__(self, download_dir="./data"):
         self.download_dir = Path(download_dir)
         self.download_dir.mkdir(exist_ok=True)
+    
+    
+
         
     def download_filtered_data(self, url="https://www.rd.usda.gov/rural-data-gateway/rural-investments/data"):
         """
@@ -71,63 +96,21 @@ class USDADataFetcher:
                     export_button.click()
                     print("Clicked export button")
                     
-                    # Wait a moment for the popup/modal to appear
+                    # Wait a moment for the download crosstab popup/modal to appear
                     page.wait_for_timeout(2000)
 
-                    # Try different selectors for the download button in the dialog
-                    download_selectors = [
-                        '[class*="suppressClickBusting"]', # srsly
-                        "button:has-text('Download')",  # do not click Data Download
-                        '.tabDownloadFileButton',  # The actual Tableau download link
-                        'a.tabDownloadFileButton',  # More specific - anchor with class
-                        '[class*="tabDownloadFileButton"]',  # Partial class match
-                    ]
-                    
-                    download_button = None
-                    for selector in download_selectors:
-                        try:
-                            download_button = page.wait_for_selector(selector, timeout=5000)
-                            print(f"Found download button with selector: {selector}")
-                            break
-                        except:
-                            continue
-                    
-                    if not download_button:
-                        print("No download button found. Maybe direct download? Waiting for download...")
-                        # if user hits the button manually, will work
-                        try:
-                            with page.expect_download(timeout=10000) as download_info:
-                                pass  # Download may have already started
+
+                    with page.expect_download() as download_info:
+                      with page.expect_popup() as page1_info:
+                        iframe_locator = page.frame_locator('iframe[title="Data Visualization"]')
+                        the_download_button = iframe_locator.locator("[data-test-id=\"DownloadLink\"]")
+                        the_download_button.click()
+                        download = download_info.value
+                        filename = f"usda_rural_data_{int(time.time())}.csv"
+                        file_path = self.download_dir / filename
+                        print(f"Saving download as {filename}")
+                        download.save_as(str(file_path))
                             
-                            download = download_info.value
-                            filename = f"usda_rural_data_{int(time.time())}.csv"
-                            file_path = self.download_dir / filename
-                            
-                            print(f"Saving download as {filename}")
-                            download.save_as(str(file_path))
-                            
-                        except Exception as e:
-                            print(f"No direct download either: {e}")
-                            return None
-                    else:
-                        # Found download button, click it
-                        print("Setting up download handler...")
-                        try:
-                            with page.expect_download(timeout=30000) as download_info:
-                                download_button.click()
-                                print("Clicked download button")
-                            
-                            download = download_info.value
-                            filename = f"usda_rural_data_{int(time.time())}.csv"
-                            file_path = self.download_dir / filename
-                            
-                            print(f"Saving download as {filename}")
-                            download.save_as(str(file_path))
-                            
-                        except Exception as e:
-                            print(f"Download failed: {e}")
-                            return None
-                    
                     print(f"Successfully downloaded: {file_path}")
                     return file_path
                     
