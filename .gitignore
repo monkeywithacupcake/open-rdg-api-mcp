@@ -1,0 +1,25 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python bytecode and cache
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+
+# Operating system and editor files
+.DS_Store
+.vscode/
+Thumbs.db
+
+# Log and temporary files
+*.log
+*.tmp
+
+# Distribution and build artifacts
+dist/
+build/
+*.egg-info/
+

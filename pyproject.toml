@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "open-rdg-api-mcp"
+version = "0.1.0"
+description = "USDA Rural Data Gateway data fetcher with API and MCP server"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "uv>=0.1.0",
+    "selenium==4.15.2",
+    "playwright==1.40.0",
+    "pandas==2.1.4",
+    "uvicorn==0.24.0",
+    "requests==2.31.0",
+    "beautifulsoup4==4.12.2",
+    "pydantic>=2.5.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fetch*", "api*", "mcp*", "tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "."]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
