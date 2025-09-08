@@ -1,6 +1,8 @@
 # open-rdg-api-mcp
 
-[![Unofficial Project](https://img.shields.io/badge/Unofficial-purple)](#disclaimer)
+[![Unofficial Project](https://img.shields.io/badge/Unofficial-purple)](#disclaimer) 
+
+**caution - looks like the RDG is down, if you try to use it right now it will fail**
 
 ## Disclaimer <a name="disclaimer"></a>
 This is an **independent, open-source experiment**.  
@@ -59,11 +61,6 @@ It might ask you to give permission to use your mcpserver. I show this here:
 
 ![A screenshot of Claude Desktop asking permission to use usda-rural-data](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/_img/claude_desktop_using_mcp.jpg?raw=true)
 
-## Status
-This is working with the smaller dataset that is only FY25. 
-If you want to use the full data, you need to change the endpoint in `fetch/download_data.py` or download the data manually. I have not tested that yet. The full data are on the order of 350k rows; what we are downloading is 35k rows right now. 
-
-TODO: change the endpoint and test - see how much longer it takes. if fine, switch main to use that
 
 
 ## Steps in creating this project -- probably not super interesting after everything is in here
