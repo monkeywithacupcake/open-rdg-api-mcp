@@ -2,8 +2,6 @@
 
 [![Unofficial Project](https://img.shields.io/badge/Unofficial-purple)](#disclaimer) 
 
-**caution - looks like the RDG is down, if you try to use it right now it will fail**
-
 ## Disclaimer <a name="disclaimer"></a>
 This is an **independent, open-source experiment**.  
 It is **not** affiliated with, endorsed by, or sponsored by the U.S. Department of Agriculture (USDA) or USDA Rural Development
