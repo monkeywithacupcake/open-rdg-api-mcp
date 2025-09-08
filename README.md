@@ -85,13 +85,21 @@ How may investments did USDA Rural Development make in WA in 2025, and what port
 *Claude sent several intermediate responses as it looked for my answer. Some of its intermediate responses suggest that the mcp server or the api are not 100% obvious to LLMs on how to handle. You can see this in how it keeps telling me about results and what is being suggested.* 
 
 > I'll help you find information about USDA Rural Development investments in Washington state. Let me check the available data for 2025 and see what portion was allocated to water-related programs.
+>
 > Let me check what data is available and the valid fiscal years in the dataset.
+>
 > Perfect! Now I can see that 2025 data is available. Let me get the Washington state investment data for fiscal year 2025.
+>
 > Let me try without specifying the fiscal year since 2025 appears to be the only year available.
+>
 > Now let me get the breakdown by program areas to see how much was allocated to water-related programs.
+>
 > The result shows all 410 investments, which suggests all of Washington's investments in the available data may be in the Water and Environmental category. Let me verify this by getting a comparison across all program areas for Washington.
+>
 > Let me try a different approach and get detailed records to see the program breakdown.
+>
 > Great! Now I can see the different program areas. Let me check specifically for water-related investments and get a better breakdown by counting investments in each program area.
+>
 > Perfect! Now I have the complete picture. Let me provide you with the comprehensive answer.
 >   
 > Based on the USDA Rural Development data for Washington state in fiscal year 2025:
