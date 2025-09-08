@@ -29,8 +29,8 @@ A new browser window should open for you. Click 'Connect' on the left side, and 
 
 The browser window view is forced into sections, so it may seem a little clunky - you are ultimately interested in using the tools shown in the middle and then putting any arguments in and clicking 'run tool' on the right. Your result will be at the bottom on the right. 
 
-![The top part of a visible window when using mcp inspector in teh browser](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/mcp_inspector_top.jpg?raw=true)
-![The part of a visible window when using mcp inspector in the browser scrolling a little ways down](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/mcp_inspector_scroll.jpg?raw=true)
+![The top part of a visible window when using mcp inspector in teh browser](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/_img/mcp_inspector_top.jpg?raw=true)
+![The part of a visible window when using mcp inspector in the browser scrolling a little ways down](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/_img/mcp_inspector_scroll.jpg?raw=true)
 
 
 ### How to add the mcp servr to your config file
@@ -57,7 +57,7 @@ The json that you need is this:
 
 It might ask you to give permission to use your mcpserver. I show this here:
 
-![A screenshot of Claude Desktop asking permission to use usda-rural-data](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/claude_desktop_using_mcp.jpg?raw=true)
+![A screenshot of Claude Desktop asking permission to use usda-rural-data](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/_img/claude_desktop_using_mcp.jpg?raw=true)
 
 ## Status
 This is working with the smaller dataset that is only FY25. 
