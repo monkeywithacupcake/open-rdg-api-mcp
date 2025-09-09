@@ -630,8 +630,8 @@ class USDADataProcessor:
 def find_newest_csv(directory_path):
     """We only want newest csv"""
     try:
-        data_dir = Path(directory_path)
-        csv_files = data_dir.glob("*.csv")
+        data_dir = Path(directory_path) # only the detail works right now
+        csv_files = data_dir.glob("*_detail.csv")
         
         if not csv_files:
             print("There is no csv, you may need to run `uv run fetch/download_data.py`")

@@ -1,12 +1,12 @@
 # open-rdg-api-mcp
 
-[![Unofficial Project](https://img.shields.io/badge/Unofficial-purple)](#disclaimer) 
+[![Version 0.2.0](https://img.shields.io/badge/Version_0.2.0-grey)][![Unofficial Project](https://img.shields.io/badge/Unofficial-purple)](#disclaimer) 
 
 ## Disclaimer <a name="disclaimer"></a>
 This is an **independent, open-source experiment**.  
 It is **not** affiliated with, endorsed by, or sponsored by the U.S. Department of Agriculture (USDA) or USDA Rural Development
 
-Data retrieved through this project remains subject to the terms of the original data providers (e.g., USDA Rural Development).
+Data retrieved through this project remains subject to the terms of the original data provider (e.g., USDA Rural Development).
 
 ## Goal
 The goal of this project is to make a usable proof of concept for getting Tableau dashboard data into a local mcp server. 
@@ -14,12 +14,17 @@ The goal of this project is to make a usable proof of concept for getting Tablea
 Can make your local LLM get quick USDA Rural Development data with natural language rather than reling on the clicking in the Tableau dashboard. 
 
 ## Status
-Things are 'working' with 2025 data from data download page, but getting all of the data from that page proves to be a very slow process. I updated the download_data.py to start to prep to get the data from the Overview page instead. That will still allow all of the summary data but no individual details. Maybe I'll get both. IDK. 
+Currently working to incorporate both datasets. 
 
 ## Use
+
+Sadly, because the data are in a Tableau viz and there is no API on the site, the *fastest* way to query the data with natural language is by first building a local API, which means that you need to get all of the data and then host your own api. Despite having several steps, the whole of the process should be straightforward.
+
 1. fork and clone this repo
-2. `uv sync` # I may make this into a docker container
+2. `uv sync`
 3. `uv run fetch/download_data.py` # or download Export to CSV manually and put in /data dir under open-rdg-api-mcp
+  - hist (10 year) summary data from [hist_url](https://www.rd.usda.gov/rural-data-gateway/rural-investments)
+  - detail (defaults to current year) data from [detail_url](https://www.rd.usda.gov/rural-data-gateway/rural-investments/data)
 4. `uv run api/data_processor.py` # this makes the csv into .db
 5. `uv run api/server.py` # this makes the api endpoints available on localhost:8000 (already better)
 6. Now for the good part. Once you have all of that done, you should be able to use the MCP Tool
@@ -32,7 +37,7 @@ A new browser window should open for you. Click 'Connect' on the left side, and 
 
 The browser window view is forced into sections, so it may seem a little clunky - you are ultimately interested in using the tools shown in the middle and then putting any arguments in and clicking 'run tool' on the right. Your result will be at the bottom on the right. 
 
-![The top part of a visible window when using mcp inspector in teh browser](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/_img/mcp_inspector_top.jpg?raw=true)
+![The top part of a visible window when using mcp inspector in the browser](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/_img/mcp_inspector_top.jpg?raw=true)
 ![The part of a visible window when using mcp inspector in the browser scrolling a little ways down](https://github.com/monkeywithacupcake/open-rdg-api-mcp/blob/main/_img/mcp_inspector_scroll.jpg?raw=true)
 
 
@@ -75,7 +80,7 @@ It might ask you to give permission to use your mcpserver. I show this here:
 4.  Make an MCP Server consuming that API
 
 
-## Example of actual use
+## Example of actual use (this is when only the csv from the /data endpoint was used, may not be valid anymore)
 I finished all of the setup steps, and I added the mcp server to Claude Desktop. It ended up querying usda_rural_data mcp server 8 times, using all three of the tools. 
 
 **Prompt:**

@@ -83,7 +83,7 @@ class USDADataFetcher:
                         the_download_button = iframe_locator.locator("[data-test-id=\"DownloadLink\"]")
                         the_download_button.click()
                         download = download_info.value
-                        filename = f"usda_rural_data_{int(time.time())}.csv"
+                        filename = f"usda_rural_detail_{int(time.time())}.csv"
                         file_path = self.download_dir / filename
                         print(f"Saving download as {filename}")
                         download.save_as(str(file_path))
