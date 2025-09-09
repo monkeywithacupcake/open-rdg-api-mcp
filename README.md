@@ -13,6 +13,9 @@ The goal of this project is to make a usable proof of concept for getting Tablea
 
 Can make your local LLM get quick USDA Rural Development data with natural language rather than reling on the clicking in the Tableau dashboard. 
 
+## Status
+Things are 'working' with 2025 data from data download page, but getting all of the data from that page proves to be a very slow process. I updated the download_data.py to start to prep to get the data from the Overview page instead. That will still allow all of the summary data but no individual details. Maybe I'll get both. IDK. 
+
 ## Use
 1. fork and clone this repo
 2. `uv sync` # I may make this into a docker container

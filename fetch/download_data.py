@@ -8,43 +8,21 @@ from playwright.sync_api import sync_playwright
 import time
 from pathlib import Path
 
-def print_links_in_div(page, div_class_name):
-
-        # Construct the CSS selector to target links within the specific div
-        selector = f"div.{div_class_name} a"
-
-        # Find all link elements within the div
-        link_elements = page.locator(selector).all()
-
-        # Iterate through the link elements and print their text content
-        if link_elements:
-            print(f"Links within div with class '{div_class_name}':")
-            for link in link_elements:
-                print(link.text_content())
-                print(link.get_attribute('href'))
-
-        else:
-            print(f"No links found within div with class '{div_class_name}'.")
-
-def handle_dialog(dialog):
-    print(dialog.message)
-    dialog.dismiss()
-
 class USDADataFetcher:
     def __init__(self, download_dir="./data"):
         self.download_dir = Path(download_dir)
         self.download_dir.mkdir(exist_ok=True)
-    
-    
-
         
-    def download_filtered_data(self, url="https://www.rd.usda.gov/rural-data-gateway/rural-investments/data"):
+    def download_rdg_data(self):
         """
-        Download CSV data from the Data Download Page
-        this page only has current year 20205
-        will need to test with main page
+        Download CSV data from the RDG
+        Gets both data from overview and details
+        ONLY GETS details for current year, if get all, it times out
         Handles: Export to CSV -> popup -> Download button -> new tab -> accept download
         """
+        #hist_url = "https://www.rd.usda.gov/rural-data-gateway/rural-investments"
+        detail_url = "https://www.rd.usda.gov/rural-data-gateway/rural-investments/data"
+
         with sync_playwright() as p:
             print("Launching browser...")
             browser = None
@@ -61,8 +39,8 @@ class USDADataFetcher:
                 page = context.new_page()
                 
                 try:
-                    print(f"Navigating to {url}")
-                    page.goto(url, wait_until="networkidle", timeout=60000)
+                    print(f"Navigating to {detail_url}")
+                    page.goto(detail_url, wait_until="networkidle", timeout=60000)
                     
                     print("Waiting for page to load completely...")
                     page.wait_for_timeout(5000)  # Wait 5 seconds cuz tableau is slooow
