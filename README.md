@@ -1,6 +1,7 @@
 # open-rdg-api-mcp
 
-[![Version 0.2.0](https://img.shields.io/badge/Version_0.2.0-grey)][![Unofficial Project](https://img.shields.io/badge/Unofficial-purple)](#disclaimer) 
+![Version 0.2.0](https://img.shields.io/badge/Version_0.2.0-grey)
+[![Unofficial Project](https://img.shields.io/badge/Unofficial-purple)](#disclaimer) 
 
 ## Disclaimer <a name="disclaimer"></a>
 This is an **independent, open-source experiment**.  
@@ -11,14 +12,14 @@ Data retrieved through this project remains subject to the terms of the original
 ## Goal
 The goal of this project is to make a usable proof of concept for getting Tableau dashboard data into a local mcp server. 
 
-Can make your local LLM get quick USDA Rural Development data with natural language rather than reling on the clicking in the Tableau dashboard. 
+Can make your local LLM get quick USDA Rural Development data with natural language rather than relying on the clicking in the Tableau dashboard. 
 
 ## Status
 Currently working to incorporate both datasets. 
 
-[x] changed download data
-[ ] updating process data 
-[ ] later -> update api/server and mcp/server (if i make enough changes in api/server)
+- [x] changed download data
+- [ ] updating process data 
+- [ ] later -> update api/server and mcp/server (if i make enough changes in api/server)
 
 ## Use
 
@@ -46,7 +47,7 @@ The browser window view is forced into sections, so it may seem a little clunky 
 
 
 ### How to add the mcp servr to your config file
-Your chatbot should tell you where to find this, in Claude Desktop, you can go to Settings, Developer, and it will show you where the config file is. Or, you can search for information on mcp servers in your chatbot and get the details that work for you.
+Your LLM should tell you where to find this, in Claude Desktop, you can go to Settings, Developer, and it will show you where the config file is. Or, you can search for information on mcp servers for your specific setup and get the details that work for you.
 
 The json that you need is this: 
 *note: i am on a mac, windows users may have to play with paths*
