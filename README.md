@@ -16,6 +16,10 @@ Can make your local LLM get quick USDA Rural Development data with natural langu
 ## Status
 Currently working to incorporate both datasets. 
 
+[x] changed download data
+[ ] updating process data 
+[ ] later -> update api/server and mcp/server (if i make enough changes in api/server)
+
 ## Use
 
 Sadly, because the data are in a Tableau viz and there is no API on the site, the *fastest* way to query the data with natural language is by first building a local API, which means that you need to get all of the data and then host your own api. Despite having several steps, the whole of the process should be straightforward.
