@@ -18,8 +18,11 @@ Can make your local LLM get quick USDA Rural Development data with natural langu
 Currently working to incorporate both datasets. 
 
 - [x] changed download data
-- [ ] updating process data 
-- [ ] later -> update api/server and mcp/server (if i make enough changes in api/server)
+- [X] updating process data 
+- [X] later -> update api/server and mcp/server (if i make enough changes in api/server)
+- [ ] test new mcp/server.py 
+- [ ] review api/dataproessor
+- [ ] update examples
 
 ## Use
 
