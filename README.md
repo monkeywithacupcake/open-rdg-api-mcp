@@ -78,8 +78,8 @@ It might ask you to give permission to use your mcpserver. I show this here:
 4.  Make an MCP Server consuming that API
 
 
-## Example of actual use (this is when only the csv from the /data endpoint was used, may not be valid anymore)
-I finished all of the setup steps, and I added the mcp server to Claude Desktop. It ended up querying usda_rural_data mcp server 8 times, using all three of the tools. 
+## Example of actual use
+I finished all of the setup steps, and I added the mcp server to Claude Desktop. It ended up querying usda_rural_data mcp server more than 10 times (you can see the calls below) 
 
 **Prompt:**
 How may investments did USDA Rural Development make in WA in 2024, and what portion of them were for water?
