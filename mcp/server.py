@@ -6,7 +6,6 @@ Provides LLMs with access to USDA Rural Investment data through semantic tools
 
 from typing import Optional, Dict, List, Any
 import httpx
-import asyncio
 from pathlib import Path
 import sys
 from datetime import datetime
@@ -370,7 +369,7 @@ async def get_summary_data(
     try:
         if not await api_client.health_check():
             return {
-                "error": "Enhanced USDA data API is not available. Please ensure the API server is running on port 8001.",
+                "error": "Local USDA data API is not available. Please ensure the API server is running on port 8001.",
                 "status": "api_unavailable"
             }
         
@@ -487,11 +486,6 @@ async def _resolve_location_name(location: str) -> Optional[str]:
 async def _resolve_program_name(program: str) -> Optional[str]:
     """
     Resolve program name/description to standard program area name
-    
-    Based on the program areas available in our USDA data:
-    - Electric Programs, Single Family Housing, Business Programs, 
-    - Multifamily Housing, Telecommunications Programs, Water and Environmental,
-    - Community Facilities
     """
     if not program:
         return None
@@ -521,11 +515,13 @@ async def _resolve_program_name(program: str) -> Optional[str]:
         "housing": "Single Family Housing",  # Default to single family
         "single family": "Single Family Housing",
         "single-family": "Single Family Housing",
+        "SFH": "Single Family Housing",
         "home": "Single Family Housing",
         "homes": "Single Family Housing",
         "residential": "Single Family Housing",
         "multifamily": "Multifamily Housing",
         "multi-family": "Multifamily Housing",
+        "MFH": "Multifamily Housing",
         "apartment": "Multifamily Housing",
         "apartments": "Multifamily Housing",
         
@@ -535,8 +531,6 @@ async def _resolve_program_name(program: str) -> Optional[str]:
         "commercial": "Business Programs",
         "enterprise": "Business Programs",
         "economic development": "Business Programs",
-        "loan": "Business Programs",
-        "loans": "Business Programs",
         
         # Telecommunications variations
         "telecom": "Telecommunications Programs",
@@ -557,8 +551,7 @@ async def _resolve_program_name(program: str) -> Optional[str]:
         # Community variations
         "community": "Community Facilities",
         "facilities": "Community Facilities",
-        "public": "Community Facilities",
-        "infrastructure": "Community Facilities"
+        "public": "Community Facilities"
     }
     
     # Clean and normalize input
@@ -663,7 +656,7 @@ def _format_response_with_context(
     # Calculate aggregations from data for LLM integration compatibility
     if len(data) > 0:
         investment_amounts = [record.get("investment_dollars_numeric", 0) for record in data if record.get("investment_dollars_numeric", 0) > 0]
-        total_investments = len(data)
+        total_investments = sum(record.get("number_of_investments", 0) or 0 for record in data)
         total_dollars = sum(investment_amounts) if investment_amounts else 0
         avg_investment = total_dollars / len(investment_amounts) if investment_amounts else 0
         
@@ -694,16 +687,10 @@ def _format_response_with_context(
 
 async def _get_data_freshness_info() -> dict:
     """
-    Get data freshness information to include in all responses
-    
-    Returns age in days, freshness status, and recommendations
+    Get data freshness information  checking how old the data are
     """
     try:
         summary = await api_client.get_data_summary()
-        
-        # Updated for new API response format
-        investments_table = summary.get("investments_table", {})
-        summary_table = summary.get("summary_table", {})
         
         if not summary.get("last_updated"):
             return {
@@ -752,7 +739,7 @@ async def _get_data_freshness_info() -> dict:
 @mcp.tool()
 async def get_data_info() -> dict:
     """
-    Get metadata about the Enhanced USDA Rural Investment dataset
+    Get metadata about the Local USDA Rural Investment dataset
     
     Returns information about data freshness, available fields, dataset statistics,
     and information about both detailed and summary data sources
@@ -760,7 +747,7 @@ async def get_data_info() -> dict:
     try:
         if not await api_client.health_check():
             return {
-                "error": "Enhanced USDA data API is not available",
+                "error": "Local USDA data API is not available",
                 "status": "api_unavailable"
             }
         
@@ -778,7 +765,6 @@ async def get_data_info() -> dict:
         # Extract unique values from sample data
         states = sorted(list(set(record.get("state_name") for record in sample_data if record.get("state_name"))))
         program_areas = sorted(list(set(record.get("program_area") for record in sample_data if record.get("program_area"))))
-        fiscal_years = sorted(list(set(record.get("fiscal_year") for record in sample_data if record.get("fiscal_year"))))
         
         return {
             "dataset_overview": {
@@ -797,7 +783,7 @@ async def get_data_info() -> dict:
                 },
                 "last_updated": summary.get("last_updated", "Unknown"),
                 "geographic_coverage": "All 50 US States",
-                "data_source": "USDA Rural Development Gateway"
+                "data_source": "USDA Rural Development Rural Data Gateway"
             },
             "available_filters": {
                 "states": states,

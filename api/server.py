@@ -270,6 +270,10 @@ async def compare_aggregations(
     """
     Compare multiple states or programs using pre-computed aggregations
     """
+    # Validate compare_type first, outside try/catch
+    if compare_type not in ['states', 'programs']:
+        raise HTTPException(status_code=400, detail="compare_type must be 'states' or 'programs'")
+    
     try:
         items_list = [item.strip() for item in items.split(',')]
         comparisons = []
@@ -308,8 +312,6 @@ async def compare_aggregations(
                             "total_number_of_investments": total_investments
                         }
                     })
-        else:
-            raise HTTPException(status_code=400, detail="compare_type must be 'states' or 'programs'")
             
         return {
             "comparison_type": compare_type,

@@ -85,45 +85,7 @@ class USDADataProcessor:
         conn.commit()
         conn.close()
     
-    # TODO: jess you are here, need to process both csvs
-    def detect_csv_type(self, csv_path: Path) -> str:
-        """
-        Detect if CSV is detail or summary format based on filename and content
-        Returns: 'detail', 'summary', or 'unknown'
-        """
-        filename = csv_path.name.lower()
-        
-        if 'usda_rural_detail' in filename:
-            return 'detail'
-        elif 'usda_rural_hist' in filename:
-            return 'summary'
-        
-        # Fallback: check column structure
-        # we need this in case someone manually downloads the data and names it just whatevs
-        try:
-            # Read just the header
-            df_sample = pd.read_csv(csv_path, nrows=0, encoding='utf-8', sep='\t', low_memory=False)
-            columns = [col.lower().strip() for col in df_sample.columns]
-            
-            # Detail format has borrower_name, project_name, lender_name, etc.
-            detail_indicators = ['borrower_name', 'project_name', 'lender_name', 'county', 'zip_code']
-            # Summary format typically only has state, program area, fiscal year
-            # but it has the persistent_povierty investment that detail does not
-            summary_indicators = ['persistent_poverty_investment_dollars']
-            
-            detail_score = sum(1 for indicator in detail_indicators if any(indicator in col for col in columns))
-            summary_score = sum(1 for indicator in summary_indicators if any(indicator in col for col in columns))
-            
-            if detail_score >= 3:
-                return 'detail'
-            elif summary_score >= 1:
-                return 'summary'
-                
-        except Exception as e:
-            print(f"Error detecting CSV type for {csv_path}: {e}")
-        
-        return 'unknown'
-    
+    # TODO; separate latest file from type
     def _find_latest_file(self, data_dir: Path, file_type: str) -> Optional[Path]:
         """Find the most recent file of the specified type based on timestamp in filename"""
         files = []
@@ -149,10 +111,7 @@ class USDADataProcessor:
         """
         data_dir = self.db_path.parent
         results = {'detail_files': 0, 'summary_files': 0, 'unknown_files': 0, 'errors': 0}
-        
-        csv_files = list(data_dir.glob("usda_rural_*.csv"))
-        print(f"Found {len(csv_files)} CSV files")
-        
+
         # Find the most recent files of each type
         latest_detail_file = self._find_latest_file(data_dir, 'detail')
         latest_hist_file = self._find_latest_file(data_dir, 'hist')
@@ -184,12 +143,9 @@ class USDADataProcessor:
         if not latest_detail_file and not latest_hist_file:
             print("No valid detail or hist files found to process")
         
-        # No aggregation tables to rebuild - data is ready to query directly
-        
         return results
     
-    def process_detail_csv(self, csv_path: Path) -> bool:
-        """Process detailed transaction CSV and store in INVESTMENTS table"""
+    def _read_csv(self, csv_path:Path) -> pd.DataFrame:
         try:
             print(f"Processing detail CSV: {csv_path}")
             
@@ -210,49 +166,26 @@ class USDADataProcessor:
                 return False
             
             print(f"Loaded {len(df)} detail records")
-            
-            # Clean and standardize the data
-            df = self._clean_detail_data(df)
-            
-            # Store in INVESTMENTS table
-            return self._store_detail_data(df, csv_path)
-            
+                        
         except Exception as e:
             print(f"Error processing detail CSV {csv_path}: {e}")
             return False
+        return df
+
+    def process_detail_csv(self, csv_path: Path) -> bool:
+        """Process detailed transaction CSV and store in INVESTMENTS table"""
+        df = self._read_csv(csv_path)
+        df = self._clean_detail_data(df)
+        # Store in INVESTMENTS table
+        return self._store_detail_data(df, csv_path)
+
     
     def process_summary_csv(self, csv_path: Path) -> bool:
         """Process historical summary CSV and store in SUMMARY table"""
-        try:
-            print(f"Processing summary CSV: {csv_path}")
-            
-            # Try different encodings
-            encodings = ['utf-8', 'utf-16', 'latin-1', 'cp1252']
-            df = None
-            
-            for encoding in encodings:
-                try:
-                    df = pd.read_csv(csv_path, encoding=encoding, sep='\t', low_memory=False)
-                    print(f"Successfully loaded summary CSV with encoding: {encoding}")
-                    break
-                except (UnicodeDecodeError, Exception):
-                    continue
-            
-            if df is None:
-                print(f"Could not read summary CSV {csv_path}")
-                return False
-            
-            print(f"Loaded {len(df)} summary records")
-            
-            # Clean and standardize the data
-            df = self._clean_summary_data(df)
-            
-            # Store in SUMMARY table
-            return self._store_summary_data(df, csv_path)
-            
-        except Exception as e:
-            print(f"Error processing summary CSV {csv_path}: {e}")
-            return False
+        df = self._read_csv(csv_path)
+        df = self._clean_summary_data(df)
+        # Store in SUMMARY table
+        return self._store_summary_data(df, csv_path)
     
     def _clean_detail_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Clean and standardize detailed transaction data"""
@@ -420,11 +353,11 @@ class USDADataProcessor:
         
         try:
             # INVESTMENTS table summary
-            cursor.execute("SELECT COUNT(*), MIN(fiscal_year), MAX(fiscal_year) FROM INVESTMENTS")
+            cursor.execute("SELECT SUM(number_of_investments), MIN(fiscal_year), MAX(fiscal_year) FROM INVESTMENTS")
             inv_count, inv_min_year, inv_max_year = cursor.fetchone()
             
             # SUMMARY table summary
-            cursor.execute("SELECT COUNT(*), MIN(fiscal_year), MAX(fiscal_year) FROM SUMMARY")
+            cursor.execute("SELECT SUM(number_of_investments), MIN(fiscal_year), MAX(fiscal_year) FROM SUMMARY")
             sum_count, sum_min_year, sum_max_year = cursor.fetchone()
             
             # Total investment amounts
@@ -479,7 +412,7 @@ class USDADataProcessor:
             where_clause = " WHERE " + " AND ".join(where_conditions) if where_conditions else ""
             
             # Get total count
-            cursor.execute(f"SELECT COUNT(*) FROM INVESTMENTS{where_clause}", params)
+            cursor.execute(f"SELECT SUM(number_of_investments) FROM INVESTMENTS{where_clause}", params)
             total = cursor.fetchone()[0]
             
             # Get paginated data
@@ -531,7 +464,7 @@ class USDADataProcessor:
             where_clause = " WHERE " + " AND ".join(where_conditions) if where_conditions else ""
             
             # Get total count
-            cursor.execute(f"SELECT COUNT(*) FROM SUMMARY{where_clause}", params)
+            cursor.execute(f"SELECT SUM(number_of_investments) FROM SUMMARY{where_clause}", params)
             total = cursor.fetchone()[0]
             
             # Get paginated data
