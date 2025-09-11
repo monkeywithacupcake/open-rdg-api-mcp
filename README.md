@@ -14,16 +14,6 @@ The goal of this project is to make a usable proof of concept for getting Tablea
 
 Can make your local LLM get quick USDA Rural Development data with natural language rather than relying on the clicking in the Tableau dashboard. 
 
-## Status
-Currently working to incorporate both datasets. 
-
-- [x] changed download data
-- [X] updating process data 
-- [X] later -> update api/server and mcp/server (if i make enough changes in api/server)
-- [ ] test new mcp/server.py 
-- [ ] review api/dataproessor
-- [ ] update examples
-
 ## Use
 
 Sadly, because the data are in a Tableau viz and there is no API on the site, the *fastest* way to query the data with natural language is by first building a local API, which means that you need to get all of the data and then host your own api. Despite having several steps, the whole of the process should be straightforward.
@@ -92,49 +82,62 @@ It might ask you to give permission to use your mcpserver. I show this here:
 I finished all of the setup steps, and I added the mcp server to Claude Desktop. It ended up querying usda_rural_data mcp server 8 times, using all three of the tools. 
 
 **Prompt:**
-How may investments did USDA Rural Development make in WA in 2025, and what portion of them were for water?
+How may investments did USDA Rural Development make in WA in 2024, and what portion of them were for water?
 
 **Response:**
 
 *Claude sent several intermediate responses as it looked for my answer. Some of its intermediate responses suggest that the mcp server or the api are not 100% obvious to LLMs on how to handle. You can see this in how it keeps telling me about results and what is being suggested.* 
 
-> I'll help you find information about USDA Rural Development investments in Washington state. Let me check the available data for 2025 and see what portion was allocated to water-related programs.
->
-> Let me check what data is available and the valid fiscal years in the dataset.
->
-> Perfect! Now I can see that 2025 data is available. Let me get the Washington state investment data for fiscal year 2025.
->
-> Let me try without specifying the fiscal year since 2025 appears to be the only year available.
->
-> Now let me get the breakdown by program areas to see how much was allocated to water-related programs.
->
-> The result shows all 410 investments, which suggests all of Washington's investments in the available data may be in the Water and Environmental category. Let me verify this by getting a comparison across all program areas for Washington.
->
-> Let me try a different approach and get detailed records to see the program breakdown.
->
-> Great! Now I can see the different program areas. Let me check specifically for water-related investments and get a better breakdown by counting investments in each program area.
->
-> Perfect! Now I have the complete picture. Let me provide you with the comprehensive answer.
->   
-> Based on the USDA Rural Development data for Washington state in fiscal year 2025:
->
-> **Total Investments:** 410 investments totaling $550,421,658
->
-> **Water-Related Investments:** 1 investment totaling $634,000
->- This represents **0.24%** of total investments by count (1 out of 410)
->- This represents **0.12%** of total investment dollars ($634,000 out of $550.4 million)
->
-> The single water investment was:
->- **Recipient:** City of Ilwaco (Pacific County)
->- **Program:** Water and Environmental Program - Direct Loan
->- **Amount:** $634,000
->- **Purpose:** Water meters project
->
-> The vast majority of USDA Rural Development investments in Washington in 2025 were in other program areas, particularly:
->- Electric Programs (including major clean energy investments)
->- Business Programs
->- Single Family Housing
->- Telecommunications Programs
->- Community Facilities
+> I'll help you find information about USDA Rural Development investments in Washington state for 2024, with a focus on water-related investments.
+>  
+> Let me try a different approach to get the 2024 data for Washington state:Let me first check what data is available and the proper format for fiscal years:
 > 
-> So while Washington received significant USDA Rural Development funding overall, water and environmental projects represented a very small portion of the total investments in 2025.
+> I can see that the data covers fiscal years 2015-2025, but 2024 appears to be available in the historical summary dataset. Let me try getting Washington state data to see what's available for 2024:
+>  
+> Now let me get the specific data for 2024 and look at the program breakdown to identify water-related investments:Let me try without specifying the fiscal year to see what years are actually available:
+>  
+> Great! I can see 2024 data is available. Now let me get all the 2024 data for Washington to see all program areas and specifically identify water investments:
+> 
+> Perfect! I can see the 2024 data for Washington. Let me search specifically for water-related programs to get a more comprehensive view:
+> 
+> Based on the data I've retrieved, here's what I found about USDA Rural Development investments in Washington state for fiscal year 2024:
+> 
+> ## Total USDA Rural Development Investments in Washington (2024)
+> 
+> From the data, I can identify the following 2024 investments in Washington state:
+> 
+> **Total investments across all programs:** At least **723 investments** totaling **$226.52 million**
+> 
+> This includes:
+> - **Single Family Housing:** 210 investments ($69.29 million)
+> - **Business Programs:** 160 investments ($69.28 million) 
+> - **Multifamily Housing:** 342 investments ($56.92 million)
+> - **Water and Environmental:** 11 investments ($31.02 million)
+> 
+> ## Water-Related Investments
+> 
+> **Water investments in 2024:** **11 investments** totaling **$31.02 million**
+> 
+> **Portion for water:** The water and environmental investments represented:
+> - **1.5%** of the total number of investments (11 out of 723)
+> - **13.7%** of the total investment dollars ($31.02M out of $226.52M)
+> 
+> The "Water and Environmental" program area covers water infrastructure, wastewater systems, solid waste management, and environmental improvements - all critical for rural communities' health and economic development.
+> 
+> It's worth noting that this represents the investments I can identify from the summary data. There may be additional water-related investments within other program categories that aren't specifically categorized as "Water and Environmental."
+
+
+for record later, these are teh calls that it did:
+INFO:     127.0.0.1:54872 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54872 - "GET /data/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54872 - "GET /data/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54872 - "GET /investments?limit=100&offset=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54872 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54872 - "GET /aggregations/states?state=Washington HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54872 - "GET /data/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54874 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54874 - "GET /summary?limit=20&offset=0&state=Washington HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54874 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54874 - "GET /summary?limit=50&offset=0&state=Washington HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54874 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54874 - "GET /aggregations/states?state=Washington HTTP/1.1" 200 OK
