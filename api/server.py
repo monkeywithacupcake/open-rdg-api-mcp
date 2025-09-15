@@ -7,7 +7,7 @@ This is an API server that has to run on local machine
 
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, Any
 import uvicorn
 from pathlib import Path
 import sys

@@ -16,7 +16,75 @@ sys.path.append(str(Path(__file__).parent.parent))
 from fastmcp import FastMCP
 
 # Initialize MCP server
-mcp = FastMCP("USDA Rural Data Gateway")
+mcp = FastMCP(
+    name = "USDA Rural Data Gateway"
+    instructions="""
+        This server provides access to the data behind the USDA Rural Data Gateway.
+        Most requests will be handled by get_state_aggregations() or get_program_aggregations()
+        Call get_data_summary() for an overview of what is available
+        Only look to investments if specific loan or grant details are requested
+    """,
+    )
+
+@mcp.resource("uri://usda-rural-data/api-docs")
+async def get_api_docs() -> str:
+      """API documentation resource"""
+      return """# USDA Rural Data Gateway API Documentation
+
+  ## Base URL
+  http://localhost:8001
+
+  ## Available Endpoints
+
+  ### GET /investments
+  **Purpose**: Get detailed investment transaction data
+  **Parameters**:
+  - `limit` (int, 1-1000): Records to return (default: 100)
+  - `offset` (int): Records to skip (default: 0)  
+  - `state` (string): Filter by state ('California', 'CA')
+  - `program` (string): Filter by program area
+  - `fiscal_year` (int): Filter by fiscal year
+  - `borrower_name` (string): Search borrower name
+
+  ### GET /summary  
+  **Purpose**: Get historical summary data (aggregated by state + program + year)
+  **Parameters**: Same as /investments
+
+  ### GET /aggregations/states
+  **Purpose**: Get pre-computed state-level aggregations
+  **Parameters**: 
+  - `state` (optional): Specific state
+  - `fiscal_year` (optional): Specific year
+
+  ### GET /aggregations/programs
+  **Purpose**: Get pre-computed program-level aggregations  
+  **Parameters**: Same as states endpoint
+
+  ### GET /aggregations/compare
+  **Purpose**: Compare multiple states or programs
+  **Parameters**:
+  - `compare_type`: 'states' or 'programs'
+  - `items`: Comma-separated list to compare
+  - `fiscal_year` (optional): Specific year
+
+  ### GET /data/summary
+  **Purpose**: Database metadata and statistics
+
+  ### GET /health
+  **Purpose**: Health check
+
+  ## Program Areas
+  - Electric Programs
+  - Single Family Housing  
+  - Business Programs
+  - Multifamily Housing
+  - Telecommunications Programs
+  - Water and Environmental
+  - Community Facilities
+
+  ## Data Sources
+  - **Detailed**: Individual transaction records
+  - **Summary**: Multi-year aggregated data"""
 
 # Configuration
 API_BASE_URL = "http://localhost:8000"
