@@ -128,16 +128,39 @@ How may investments did USDA Rural Development make in WA in 2024, and what port
 
 
 for record later, these are teh calls that it did:
-INFO:     127.0.0.1:54872 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54872 - "GET /data/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54872 - "GET /data/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54872 - "GET /investments?limit=100&offset=0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54872 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54872 - "GET /aggregations/states?state=Washington HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54872 - "GET /data/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54874 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54874 - "GET /summary?limit=20&offset=0&state=Washington HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54874 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54874 - "GET /summary?limit=50&offset=0&state=Washington HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54874 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54874 - "GET /aggregations/states?state=Washington HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54872 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54872 - "GET /data/summary HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54872 - "GET /data/summary HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54872 - "GET /investments?limit=100&offset=0 HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54872 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54872 - "GET /aggregations/states?state=Washington HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54872 - "GET /data/summary HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54874 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54874 - "GET /summary?limit=20&offset=0&state=Washington HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54874 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54874 - "GET /summary?limit=50&offset=0&state=Washington HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54874 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:54874 - "GET /aggregations/states?state=Washington HTTP/1.1" 200 OK
+
+
+**NOTE**
+After adding the additional info and mcp Resource, it took fewer requests
+- INFO:     127.0.0.1:50882 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50882 - "GET /data/summary HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50882 - "GET /data/summary HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50882 - "GET /investments?limit=100&offset=0 HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50884 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50884 - "GET /summary?limit=20&offset=0&state=Washington HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50886 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50886 - "GET /summary?limit=50&offset=0&state=Washington HTTP/1.1" 200 OK
+
+some additional testing also show that Claude gets a lot of information and then decides on its own what to do with ith rather than, say, use the comparison tools.
+But it is getting the right data.
+
+When asked to compare PNW states in 2023 and 2024, it only called 3 main endpoints (and health)
+- INFO:     127.0.0.1:50893 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50893 - "GET /summary?limit=100&offset=0&state=Washington HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50893 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50893 - "GET /summary?limit=100&offset=0&state=Oregon HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50893 - "GET /health HTTP/1.1" 200 OK
+- INFO:     127.0.0.1:50893 - "GET /summary?limit=100&offset=0&state=Idaho HTTP/1.1" 200 OK

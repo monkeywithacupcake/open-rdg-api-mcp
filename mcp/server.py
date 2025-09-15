@@ -17,7 +17,7 @@ from fastmcp import FastMCP
 
 # Initialize MCP server
 mcp = FastMCP(
-    name = "USDA Rural Data Gateway"
+    name = "USDA Rural Data Gateway",
     instructions="""
         This server provides access to the data behind the USDA Rural Data Gateway.
         Most requests will be handled by get_state_aggregations() or get_program_aggregations()
